@@ -424,13 +424,13 @@ KeyDiv = Button(myFrame,
                 command=lambda: funcDiv(numberScreen.get()))
 KeyDiv.config(height=4, width=8)
 KeyDiv.grid(row=3, column=4)
-KeySquare = Button(myFrame,
-                   text='x^2',
-                   bg='grey',
-                   fg='white',
-                   command=lambda: funcSquare(numberScreen.get()))
-KeySquare.config(height=4, width=8)
-KeySquare.grid(row=3, column=5)
+#KeySquare = Button(myFrame,
+#                   text='x^2',
+#                   bg='grey',
+#                   fg='white',
+#                   command=lambda: funcSquare(numberScreen.get()))
+#KeySquare.config(height=4, width=8)
+#KeySquare.grid(row=3, column=5)
 KeyCos = Button(myFrame,
                 text='cos(x)',
                 bg="grey",
