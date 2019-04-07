@@ -23,10 +23,10 @@ result = 0
 
 numberScreen = StringVar()
 
-pantalla = Entry(myFrame, textvariable=numberScreen, state="readonly",
+screen = Entry(myFrame, textvariable=numberScreen, state="readonly",
                  readonlybackground="black", bd=20, relief=FLAT, fg='#9FEAF4')
-pantalla.grid(row=1, column=1, columnspan=10, sticky='we')
-pantalla.config(justify="right")
+screen.grid(row=1, column=1, columnspan=10, sticky='we')
+screen.config(justify="right")
 numberScreen.set("0")
 
 #----Numbers Pressed----#
@@ -59,12 +59,12 @@ def numberPressed(num):
 
 
 #----funcSum----#
-contador_sum = 0
+counter_sum = 0
 
 
 def funcSum(num):
 
-    global contador_sum
+    global counter_sum
     global operation
     global result
     global resetScreen
@@ -75,7 +75,7 @@ def funcSum(num):
 
     resetScreen = True
 
-    contador_sum += 1
+    counter_sum += 1
 
     numberScreen.set(result)
 
@@ -83,7 +83,7 @@ def funcSum(num):
 #----funcSubs----#
 num1 = 0
 
-contador_funcSubs = 0z
+counter_funcSubs = 0
 
 
 def funcSubs(num):
@@ -91,10 +91,10 @@ def funcSubs(num):
     global operation
     global result
     global num1
-    global contador_funcSubs
+    global counter_funcSubs
     global resetScreen
 
-    if contador_funcSubs == 0:
+    if counter_funcSubs == 0:
         if numberScreen.get() == '0':
             numberScreen.set("-")
         else:
@@ -104,9 +104,9 @@ def funcSubs(num):
     else:
         if len(numberScreen.get()) == 0:
             result = ""
-            contador_funcSubs = -1
+            counter_funcSubs = -1
         else:
-            if contador_funcSubs == 1:
+            if counter_funcSubs == 1:
 
                 result = num1-float(num)
 
@@ -118,7 +118,7 @@ def funcSubs(num):
 
         result = numberScreen.get()
     if numberScreen.get() != '-':
-        contador_funcSubs += 1
+        counter_funcSubs += 1
 
         operation = "-"
 
@@ -140,7 +140,7 @@ def funcFact(num):
 
 
 #----funcMult----#
-contador_multi = 0
+counter_multi = 0
 
 
 def funcMul(num):
@@ -148,10 +148,10 @@ def funcMul(num):
     global operation
     global result
     global num1
-    global contador_multi
+    global counter_multi
     global resetScreen
 
-    if contador_multi == 0:
+    if counter_multi == 0:
 
         num1 = float(num)
 
@@ -159,7 +159,7 @@ def funcMul(num):
 
     else:
 
-        if contador_multi == 1:
+        if counter_multi == 1:
 
             result = num1*float(num)
 
@@ -171,7 +171,7 @@ def funcMul(num):
 
         result = numberScreen.get()
 
-    contador_multi += 1
+    counter_multi += 1
 
     operation = "*"
 
@@ -180,7 +180,7 @@ def funcMul(num):
 #----funcDivision----#
 
 
-contador_divi = 0
+counter_divi = 0
 
 
 def funcDiv(num):
@@ -188,10 +188,10 @@ def funcDiv(num):
     global operation
     global result
     global num1
-    global contador_divi
+    global counter_divi
     global resetScreen
 
-    if contador_divi == 0:
+    if counter_divi == 0:
 
         num1 = float(num)
 
@@ -199,7 +199,7 @@ def funcDiv(num):
 
     else:
 
-        if contador_divi == 1:
+        if counter_divi == 1:
 
             result = num1/int(num)
 
@@ -211,7 +211,7 @@ def funcDiv(num):
 
         result = numberScreen.get()
 
-    contador_divi += 1
+    counter_divi += 1
 
     operation = "/"
 
@@ -219,7 +219,7 @@ def funcDiv(num):
 #----funcDivision----#
 
 
-contador_remain = 0
+counter_remain = 0
 
 
 def funcRemain(num):
@@ -227,10 +227,10 @@ def funcRemain(num):
     global operation
     global result
     global num1
-    global contador_remain
+    global counter_remain
     global resetScreen
 
-    if contador_remain == 0:
+    if counter_remain == 0:
 
         num1 = int(num)
 
@@ -238,7 +238,7 @@ def funcRemain(num):
 
     else:
 
-        if contador_remain == 1:
+        if counter_remain == 1:
 
             result = int(num1) % int(num)
 
@@ -250,7 +250,7 @@ def funcRemain(num):
 
         result = numberScreen.get()
 
-    contador_remain += 1
+    counter_remain += 1
 
     operation = "%"
 
@@ -301,10 +301,10 @@ def results():
 
     global result
     global operation
-    global contador_funcSubs
-    global contador_multi
-    global contador_divi
-    global contador_remain
+    global counter_funcSubs
+    global counter_multi
+    global counter_divi
+    global counter_remain
 
     if operation == "+":
 
@@ -316,47 +316,47 @@ def results():
 
         numberScreen.set(float(result)-float(numberScreen.get()))
         result = 0
-        contador_funcSubs = 0
+        counter_funcSubs = 0
 
     elif operation == "*":
 
         numberScreen.set(float(result)*float(numberScreen.get()))
         result = 0
-        contador_multi = 0
+        counter_multi = 0
 
     elif operation == "/":
 
         numberScreen.set(float(result)/float(numberScreen.get()))
         result = 0
-        contador_divi = 0
+        counter_divi = 0
     elif operation == "%":
         numberScreen.set(int(result) % int(numberScreen.get()))
         result = 0
-        contador_remain = 0
+        counter_remain = 0
 
 #----Reset----#
 
 
 def reset():
-    global contador_divi
-    global contador_funcSubs
-    global contador_multi
-    global contador_remain
-    global contador_sum
+    global counter_divi
+    global counter_funcSubs
+    global counter_multi
+    global counter_remain
+    global counter_sum
     global result
     global num1
 
     result = 0
     num1 = 0
-    contador_divi = 0
-    contador_funcSubs = 0
-    contador_multi = 0
-    contador_remain = 0
-    contador_sum = 0
+    counter_divi = 0
+    counter_funcSubs = 0
+    counter_multi = 0
+    counter_remain = 0
+    counter_sum = 0
     numberScreen.set("0")
 
 
-#----Fila0----#
+#----Row0----#
 KeyReset = Button(myFrame, text='AC',
                   command=lambda: reset(), bg='#252440', fg='white')
 KeyReset.config(height=4, width=8)
@@ -374,7 +374,7 @@ KeyRemain = Button(myFrame, text='%',   bg="grey",
 KeyRemain.config(height=4, width=8)
 KeyRemain.grid(row=2, column=5)
 
-#----Fila1----#
+#----Row1----#
 Key7 = Button(myFrame, text='7', bg='#81BEF7',
               command=lambda: numberPressed('7'))
 Key7.config(height=4, width=8)
@@ -399,7 +399,7 @@ KeyCos = Button(myFrame, text='cos(x)', bg="grey",
                 fg='white', command=lambda: funcTrigono(numberScreen.get(), cos))
 KeyCos.config(height=4, width=8)
 KeyCos.grid(row=3, column=5)
-#----Fila2----#
+#----Row2----#
 Key4 = Button(myFrame, text='4', bg='#81BEF7',
               command=lambda: numberPressed('4'))
 Key4.config(height=4, width=8)
@@ -421,7 +421,7 @@ KeySin = Button(myFrame, text='sin(x)', bg="grey",
 KeySin.config(height=4, width=8)
 KeySin.grid(row=4, column=5)
 
-#----Fila3----#
+#----Row3----#
 Key1 = Button(myFrame, text='1', bg='#81BEF7',
               command=lambda: numberPressed('1'))
 Key1.config(height=4, width=8)
@@ -442,7 +442,7 @@ KeyTan = Button(myFrame, text='tan(x)', bg="grey",
                 fg='white', command=lambda: funcTrigono(numberScreen.get(), tan))
 KeyTan.config(height=4, width=8)
 KeyTan.grid(row=5, column=5)
-#----Fila4----#
+#----Row4----#
 Key0 = Button(myFrame, text='0', bg='#81BEF7',
               command=lambda: numberPressed('0'))
 Key0.config(height=4, width=8)
