@@ -1,544 +1,345 @@
-from math import cos, factorial, log, sin, sqrt, tan
-from tkinter import Button, Entry, Frame, StringVar, Tk
-from tkinter.constants import DISABLED, FLAT
-
-root = Tk()
-
-myFrame = Frame(root)
-
-root.title("Calculator")
-
-root.resizable(False, False)
-
-myFrame.pack()
-
-operation = ""
-
-resetScreen = False
-
-result = 0
-
-#----Screen----#
-
-numberScreen = StringVar()
-
-screen = Entry(myFrame,
-               textvariable=numberScreen,
-               state="readonly",
-               readonlybackground="black",
-               bd=20,
-               relief=FLAT,
-               fg='#9FEAF4')
-screen.grid(row=1, column=1, columnspan=10, sticky='we')
-screen.config(justify="right")
-numberScreen.set("0")
-
-#----Numbers Pressed----#
+"""
+TODO
+"""
+import math
+import tkinter as tk
+from typing import Any, Callable, Iterator, List, Tuple, Union
 
 
-def numberPressed(num):
+class CalculatorV2(tk.Frame):
+    """
+    TODO
+    """
 
-    global operation
-    global resetScreen
+    def __init__(self, master=None) -> None:
+        super().__init__(master)
+        self.grid()
 
-    if numberScreen.get() == '0':
-        if num != '.':
-            numberScreen.set("")
+        self.operation: str = ""
+        self.reset_screen: bool = False
+        self.result: float = 0
+        self.number_stored: float = 0
 
-    if resetScreen != False:
+        self._substract_counter: int = 0
+        self._multiply_counter: int = 0
+        self._division_counter: int = 0
+        self._modulo_counter: int = 0
 
-        numberScreen.set(num)
-        resetScreen = False
+        self.buttons: List[tk.Button] = []
 
-    else:
-        if num == '.':
-            if numberScreen.get().count('.') == 0:
-                numberScreen.set(numberScreen.get() + num)
+        master.title("Calculator")
+        master.resizable(width=False, height=False)
+
+        self.number_screen = tk.StringVar()
+        self._screen = tk.Entry(
+            self,
+            textvariable=self.number_screen,
+            state="readonly",
+            readonlybackground="black",
+            bd=20,
+            relief="flat",
+            fg="#9FEAF4",
+        )
+        self._screen.grid(row=1, column=1, columnspan=10, sticky="we")
+        self._screen.config(justify="right")
+        self.number_screen.set("0")
+        self.config_first_button()
+        self.config_buttons()
+
+    def press_number(self, num: str) -> None:
+        if (
+            self.number_screen.get() == "0"
+            and num not in "0."
+            and not self.number_screen.get().count(".")
+        ):
+            self.number_screen.set("")
+
+        if self.reset_screen:
+            self.number_screen.set(num)
+            self.reset_screen = False
+
         else:
-            if num == '0':
-                if numberScreen.get() != '0':
-                    numberScreen.set(numberScreen.get() + num)
-            else:
-                numberScreen.set(numberScreen.get() + num)
+            if (
+                num not in "0."
+                or (num == "0" and self.number_screen.get() != "0")
+                or (num == "." and not self.number_screen.get().count("."))
+            ):
+                self.number_screen.set(self.number_screen.get() + num)
 
+    def add_func(self) -> None:
+        num: str = self.number_screen.get()
+        if "." in num:
+            self.result += float(num)
 
-#----funcSum----#
-counter_sum = 0
-
-
-def funcSum(num):
-
-    global counter_sum
-    global operation
-    global result
-    global resetScreen
-
-    result += float(num)
-
-    operation = "+"
-
-    resetScreen = True
-
-    counter_sum += 1
-
-    numberScreen.set(result)
-
-
-#----funcSubs----#
-num1 = 0
-
-counter_funcSubs = 0
-
-
-def funcSubs(num):
-
-    global operation
-    global result
-    global num1
-    global counter_funcSubs
-    global resetScreen
-
-    if counter_funcSubs == 0:
-        if numberScreen.get() == '0':
-            numberScreen.set("-")
         else:
-            num1 = float(num)
-            result = num1
+            self.result += int(num)
+        self.operation = "+"
+        self.reset_screen = True
+        self.number_screen.set(self.result)
 
-    else:
-        if len(numberScreen.get()) == 0:
-            result = ""
-            counter_funcSubs = -1
-        else:
-            if counter_funcSubs == 1:
-
-                result = num1 - float(num)
+    def substract_func(self) -> None:
+        num: str = self.number_screen.get()
+        if num != "-":
+            number: float = float(num)
+            if not self._substract_counter:
+                if self.number_screen.get() == "0":
+                    self.number_screen.set("-")
+                    return
+                else:
+                    self.number_stored = number
 
             else:
+                if self._substract_counter == 1:
+                    self.result = self.number_stored - number
 
-                result -= float(num)
+                else:
+                    self.result -= number
 
-        numberScreen.set(result)
+                self.number_screen.set(self.result)
 
-        result = numberScreen.get()
-    if numberScreen.get() != '-':
-        counter_funcSubs += 1
+            self._substract_counter += 1
+            self.operation = "-"
+            self.reset_screen = True
 
-        operation = "-"
+    def factorial_func(self) -> None:
+        num: str = self.number_screen.get()
+        try:
+            number: float = float(num) if num.endswith(".0") else int(num)
 
-        resetScreen = True
-
-
-#----funcFact----#
-
-
-def funcFact(num):
-    global operation
-    global resetScreen
-
-    if float(num) >= 0:
-        result = factorial(float(num))
-        numberScreen.set(result)
-    else:
-        numberScreen.set("SUBNORMAL")
-    resetScreen = True
-
-
-#----funcMult----#
-counter_multi = 0
-
-
-def funcMul(num):
-
-    global operation
-    global result
-    global num1
-    global counter_multi
-    global resetScreen
-
-    if counter_multi == 0:
-
-        num1 = float(num)
-
-        result = num1
-
-    else:
-
-        if counter_multi == 1:
-
-            result = num1 * float(num)
+        except ValueError:
+            self.number_screen.set("USE ONLY INTEGRAL VALUES")
 
         else:
+            if number >= 0:
+                self.number_screen.set(math.factorial(number))
 
-            result = float(result) * float(num)
+            else:
+                self.number_screen.set("YOU BROKE IT, IDIOT")
 
-        numberScreen.set(result)
+        self.reset_screen = True
 
-        result = numberScreen.get()
-
-    counter_multi += 1
-
-    operation = "*"
-
-    resetScreen = True
-
-
-#----funcDivision----#
-
-counter_divi = 0
-
-
-def funcDiv(num):
-
-    global operation
-    global result
-    global num1
-    global counter_divi
-    global resetScreen
-
-    if counter_divi == 0:
-
-        num1 = float(num)
-
-        result = num1
-
-    else:
-
-        if counter_divi == 1:
-
-            result = num1 / int(num)
+    def multiply_func(self) -> None:
+        number: float = float(self.number_screen.get())
+        if not self._multiply_counter:
+            self.number_stored = number
 
         else:
+            self.result = self.number_stored * number
+            self.number_screen.set(self.result)
 
-            result = float(result) / float(num)
+        self._multiply_counter += 1
+        self.operation = "*"
+        self.reset_screen = True
 
-        numberScreen.set(result)
-
-        result = numberScreen.get()
-
-    counter_divi += 1
-
-    operation = "/"
-
-    resetScreen = True
-
-
-#----funcDivision----#
-
-counter_remain = 0
-
-
-def funcRemain(num):
-
-    global operation
-    global result
-    global num1
-    global counter_remain
-    global resetScreen
-
-    if counter_remain == 0:
-
-        num1 = int(num)
-
-        result = num1
-
-    else:
-
-        if counter_remain == 1:
-
-            result = int(num1) % int(num)
+    def division_func(self) -> None:
+        number: float = float(self.number_screen.get())
+        if not self._division_counter:
+            self.number_stored = number
 
         else:
+            if self._division_counter == 1:
+                self.result = self.number_stored / number
 
-            result = int(result) % int(num)
+            else:
+                self.result /= number
 
-        numberScreen.set(result)
+            self.number_screen.set(self.result)
 
-        result = numberScreen.get()
+        self._division_counter += 1
+        self.operation = "/"
+        self.reset_screen = True
 
-    counter_remain += 1
+    def modulo_func(self) -> None:
+        number: float = float(self.number_screen.get())
+        if not self._modulo_counter:
+            self.number_stored = number
 
-    operation = "%"
+        else:
+            if self._modulo_counter == 1:
+                self.result = self.number_stored % number
 
-    resetScreen = True
+            else:
+                self.result %= number
+
+            self.number_screen.set(self.result)
+
+        self._modulo_counter += 1
+        self.operation = "%"
+        self.reset_screen = True
+
+    def sqrt_func(self) -> None:
+        number: float = float(self.number_screen.get())
+        if number >= 0:
+            self.number_screen.set(math.sqrt(number))
+
+        else:
+            number = math.sqrt(abs(number))
+            self.number_screen.set(f"{number}j")
+
+        self.reset_screen = True
+
+    def square_func(self) -> None:
+        number: float = float(self.number_screen.get())
+        self.number_screen.set(number ** 2)
+        self.reset_screen = True
+
+    def trigonometric_func(self, function: Callable[[float], float]) -> None:
+        number: float = float(self.number_screen.get())
+        self.number_screen.set(function(number))
+        self.reset_screen = True
+
+    ##############################################
+
+    def results(self) -> None:
+        number: float = float(self.number_screen.get())
+        operation_done: str = self.operation
+        if operation_done == "+":
+            self.number_screen.set(self.result + number)
+            self.result = 0
+
+        elif operation_done == "-":
+            self.number_screen.set(self.number_stored - number)
+            self._substract_counter = 0
+
+        elif operation_done == "*":
+            self.number_screen.set(self.number_stored * number)
+            self._multiply_counter = 0
+
+        elif operation_done == "/":
+            self.number_screen.set(self.number_stored / number)
+            self._division_counter = 0
+
+        elif operation_done == "%":
+            self.number_screen.set(self.number_stored % number)
+            self._modulo_counter = 0
+
+        self.number_stored = 0
+        self.operation = ""
+
+    def reset(self) -> None:
+        self.result = 0
+        self.number_stored = 0
+
+        self._substract_counter = 0
+        self._multiply_counter = 0
+        self._division_counter = 0
+        self._modulo_counter = 0
+
+        self.number_screen.set("0")
+
+    def config_first_button(self) -> None:
+        self.buttons.append(
+            tk.Button(self, text="AC", command=self.reset, bg="#252440", fg="white")
+        )
+        self.buttons[0].config(height=4, width=8)
+        self.buttons[0].grid(row=2, column=0, columnspan=3, ipadx=33)
+
+    def config_buttons(self) -> None:
+        symbols: List[str] = [
+            "√n",
+            "n!",
+            "%",
+            "7",
+            "8",
+            "9",
+            "➗",
+            "cos(x)",
+            "4",
+            "5",
+            "6",
+            "✖",
+            "sin(x)",
+            "1",
+            "2",
+            "3",
+            "➖",
+            "tan(x)",
+            "0",
+            ".",
+            "=",
+            "➕",
+            "x^2",
+        ]
+
+        functions: List[Callable[..., None]] = [
+            self.sqrt_func,
+            self.factorial_func,
+            self.modulo_func,
+            self.press_number,
+            self.press_number,
+            self.press_number,
+            self.division_func,
+            self.trigonometric_func,
+            self.press_number,
+            self.press_number,
+            self.press_number,
+            self.multiply_func,
+            self.trigonometric_func,
+            self.press_number,
+            self.press_number,
+            self.press_number,
+            self.substract_func,
+            self.trigonometric_func,
+            self.press_number,
+            self.press_number,
+            self.results,
+            self.add_func,
+            self.square_func,
+        ]
+        parameters: Iterator[Callable[[float], float]] = iter(
+            [math.cos, math.sin, math.tan]
+        )
+
+        columns: Iterator[int] = iter(
+            [3, 4, 5] + [number for _ in range(7) for number in range(1, 6)]
+        )
+
+        button_indexes: Iterator[int] = iter(range(1, 24))
+
+        rows: Iterator[int] = iter(
+            [2, 2, 2] + [number for number in range(3, 7) for _ in range(5)]
+        )
+
+        for symbol, function in zip(symbols, functions):
+            if function == self.press_number:
+                self.buttons.append(
+                    tk.Button(
+                        self,
+                        text=symbol,
+                        bg="#81BEF7",
+                        command=lambda parameter=symbol: self.press_number(parameter),
+                    )
+                )
+
+            elif function == self.trigonometric_func:
+                self.buttons.append(
+                    tk.Button(
+                        self,
+                        text=symbol,
+                        bg="grey",
+                        fg="white",
+                        command=lambda function=function, parameter=next(
+                            parameters
+                        ): function(parameter),
+                    )
+                )
+            else:
+                self.buttons.append(
+                    tk.Button(
+                        self,
+                        text=symbol,
+                        bg="grey",
+                        fg="white",
+                        command=lambda function=function: function(),
+                    )
+                )
+            index_of_button: int = next(button_indexes)
+            self.buttons[index_of_button].config(height=4, width=8)
+            self.buttons[index_of_button].grid(row=next(rows), column=next(columns))
 
 
-#----funcSqrt----#
+CALCULATOR = tk.Tk()
 
+APP = CalculatorV2(CALCULATOR)
 
-def funcSqrt(num):
-    global operation
-    global resetScreen
-
-    if float(num) >= 0:
-        result = sqrt(float(num))
-        numberScreen.set(result)
-    else:
-        numberScreen.set(str(sqrt(abs(float(num)))) + "i")
-
-    resetScreen = True
-
-
-#----funcSqrt----#
-
-
-def funcSquare(num):
-    global operation
-    global resetScreen
-
-    result = float(num)**2
-    numberScreen.set(result)
-
-    resetScreen = True
-
-
-#----Trigonometric Functions----#
-
-
-def funcTrigono(num, func):
-    global operation
-    global resetScreen
-
-    result = func(float(num))
-    numberScreen.set(result)
-
-    resetScreen = True
-
-
-#----Results----#
-
-
-def results():
-
-    global result
-    global operation
-    global counter_funcSubs
-    global counter_multi
-    global counter_divi
-    global counter_remain
-
-    if operation == "+":
-
-        numberScreen.set(float(result) + float(numberScreen.get()))
-
-        result = 0
-
-    elif operation == "-":
-
-        numberScreen.set(float(result) - float(numberScreen.get()))
-        result = 0
-        counter_funcSubs = 0
-
-    elif operation == "*":
-
-        numberScreen.set(float(result) * float(numberScreen.get()))
-        result = 0
-        counter_multi = 0
-
-    elif operation == "/":
-
-        numberScreen.set(float(result) / float(numberScreen.get()))
-        result = 0
-        counter_divi = 0
-    elif operation == "%":
-        numberScreen.set(int(result) % int(numberScreen.get()))
-        result = 0
-        counter_remain = 0
-
-
-#----Reset----#
-
-
-def reset():
-    global counter_divi
-    global counter_funcSubs
-    global counter_multi
-    global counter_remain
-    global counter_sum
-    global result
-    global num1
-
-    result = 0
-    num1 = 0
-    counter_divi = 0
-    counter_funcSubs = 0
-    counter_multi = 0
-    counter_remain = 0
-    counter_sum = 0
-    numberScreen.set("0")
-
-
-#----Row0----#
-KeyReset = Button(myFrame,
-                  text='AC',
-                  command=lambda: reset(),
-                  bg='#252440',
-                  fg='white')
-KeyReset.config(height=4, width=8)
-KeyReset.grid(row=2, column=0, columnspan=3, ipadx=33)
-KeySqrt = Button(myFrame,
-                 text='√n',
-                 bg="grey",
-                 fg='white',
-                 command=lambda: funcSqrt(numberScreen.get()))
-KeySqrt.config(height=4, width=8)
-KeySqrt.grid(row=2, column=3)
-KeyFact = Button(myFrame,
-                 text="n!",
-                 bg="grey",
-                 fg='white',
-                 command=lambda: funcFact(numberScreen.get()))
-KeyFact.config(height=4, width=8)
-KeyFact.grid(row=2, column=4)
-KeyRemain = Button(myFrame,
-                   text='%',
-                   bg="grey",
-                   fg='white',
-                   command=lambda: funcRemain(numberScreen.get()))
-KeyRemain.config(height=4, width=8)
-KeyRemain.grid(row=2, column=5)
-
-#----Row1----#
-Key7 = Button(myFrame,
-              text='7',
-              bg='#81BEF7',
-              command=lambda: numberPressed('7'))
-Key7.config(height=4, width=8)
-Key7.grid(row=3, column=1)
-Key8 = Button(myFrame,
-              text='8',
-              bg='#81BEF7',
-              command=lambda: numberPressed('8'))
-Key8.config(height=4, width=8)
-Key8.grid(row=3, column=2)
-Key9 = Button(myFrame,
-              text='9',
-              bg='#81BEF7',
-              command=lambda: numberPressed('9'))
-Key9.config(height=4, width=8)
-Key9.grid(row=3, column=3)
-KeyDiv = Button(myFrame,
-                text='➗',
-                bg="grey",
-                fg='white',
-                command=lambda: funcDiv(numberScreen.get()))
-KeyDiv.config(height=4, width=8)
-KeyDiv.grid(row=3, column=4)
-#KeySquare = Button(myFrame,
-#                   text='x^2',
-#                   bg='grey',
-#                   fg='white',
-#                   command=lambda: funcSquare(numberScreen.get()))
-#KeySquare.config(height=4, width=8)
-#KeySquare.grid(row=3, column=5)
-KeyCos = Button(myFrame,
-                text='cos(x)',
-                bg="grey",
-                fg='white',
-                command=lambda: funcTrigono(numberScreen.get(), cos))
-KeyCos.config(height=4, width=8)
-KeyCos.grid(row=3, column=5)
-#----Row2----#
-Key4 = Button(myFrame,
-              text='4',
-              bg='#81BEF7',
-              command=lambda: numberPressed('4'))
-Key4.config(height=4, width=8)
-Key4.grid(row=4, column=1)
-Key5 = Button(myFrame,
-              text='5',
-              bg='#81BEF7',
-              command=lambda: numberPressed('5'))
-Key5.config(height=4, width=8)
-Key5.grid(row=4, column=2)
-Key6 = Button(myFrame,
-              text='6',
-              bg='#81BEF7',
-              command=lambda: numberPressed('6'))
-Key6.config(height=4, width=8)
-Key6.grid(row=4, column=3)
-KeyMult = Button(myFrame,
-                 text='✖',
-                 bg="grey",
-                 fg='white',
-                 command=lambda: funcMul(numberScreen.get()))
-KeyMult.config(height=4, width=8)
-KeyMult.grid(row=4, column=4)
-KeySin = Button(myFrame,
-                text='sin(x)',
-                bg="grey",
-                fg='white',
-                command=lambda: funcTrigono(numberScreen.get(), sin))
-KeySin.config(height=4, width=8)
-KeySin.grid(row=4, column=5)
-
-#----Row3----#
-Key1 = Button(myFrame,
-              text='1',
-              bg='#81BEF7',
-              command=lambda: numberPressed('1'))
-Key1.config(height=4, width=8)
-Key1.grid(row=5, column=1)
-Key2 = Button(myFrame,
-              text='2',
-              bg='#81BEF7',
-              command=lambda: numberPressed('2'))
-Key2.config(height=4, width=8)
-Key2.grid(row=5, column=2)
-Key3 = Button(myFrame,
-              text='3',
-              bg='#81BEF7',
-              command=lambda: numberPressed('3'))
-Key3.config(height=4, width=8)
-Key3.grid(row=5, column=3)
-KeyRest = Button(myFrame,
-                 text='➖',
-                 bg="grey",
-                 fg='white',
-                 command=lambda: funcSubs(numberScreen.get()))
-KeyRest.config(height=4, width=8)
-KeyRest.grid(row=5, column=4)
-KeyTan = Button(myFrame,
-                text='tan(x)',
-                bg="grey",
-                fg='white',
-                command=lambda: funcTrigono(numberScreen.get(), tan))
-KeyTan.config(height=4, width=8)
-KeyTan.grid(row=5, column=5)
-#----Row4----#
-Key0 = Button(myFrame,
-              text='0',
-              bg='#81BEF7',
-              command=lambda: numberPressed('0'))
-Key0.config(height=4, width=8)
-Key0.grid(row=6, column=1)
-KeyComma = Button(myFrame,
-                  text=',',
-                  bg="grey",
-                  fg='white',
-                  command=lambda: numberPressed("."))
-KeyComma.config(height=4, width=8)
-KeyComma.grid(row=6, column=2)
-KeyEqual = Button(myFrame,
-                  text='=',
-                  bg="grey",
-                  fg='white',
-                  command=lambda: results())
-KeyEqual.config(height=4, width=8)
-KeyEqual.grid(row=6, column=3)
-KeySum = Button(myFrame,
-                text='➕',
-                bg="grey",
-                fg='white',
-                command=lambda: funcSum(numberScreen.get()))
-KeySum.config(height=4, width=8)
-KeySum.grid(row=6, column=4)
-KeyLog = Button(myFrame,
-                text='ln(x)',
-                bg="grey",
-                fg='white',
-                command=lambda: funcTrigono(numberScreen.get(), log))
-KeyLog.config(height=4, width=8)
-KeyLog.grid(row=6, column=5)
-
-root.mainloop()
+CALCULATOR.mainloop()
