@@ -1,345 +1,429 @@
 """
-TODO
+A basic calculator made with tkinter library,
+inspired by @pildorasinformaticas and made by @Davichet-e
 """
 import math
+import cmath
 import tkinter as tk
-from typing import Any, Callable, Iterator, List, Tuple, Union
+from typing import Callable, Iterator, List, Tuple, Union
 
 
-class CalculatorV2(tk.Frame):
+class Calculator:
     """
-    TODO
+    Basic tkinter calculator
     """
 
     def __init__(self, master=None) -> None:
-        super().__init__(master)
-        self.grid()
+        self._frame: tk.Frame = tk.Frame(master=master)
+        self._frame.grid()
 
-        self.operation: str = ""
-        self.reset_screen: bool = False
-        self.result: float = 0
-        self.number_stored: float = 0
+        self._operation: str = ""
+        self._reset_screen: bool = False
+        self._result: Union[float, complex] = 0
+        self._number_stored: Union[float, complex] = 0
 
         self._substract_counter: int = 0
         self._multiply_counter: int = 0
         self._division_counter: int = 0
         self._modulo_counter: int = 0
 
-        self.buttons: List[tk.Button] = []
+        self._buttons: List[tk.Button] = []
 
         master.title("Calculator")
         master.resizable(width=False, height=False)
 
-        self.number_screen = tk.StringVar()
+        self._number_screen = tk.StringVar()
+        self._operation_str_var = tk.StringVar()
         self._screen = tk.Entry(
-            self,
-            textvariable=self.number_screen,
+            self._frame,
+            textvariable=self._number_screen,
             state="readonly",
             readonlybackground="black",
             bd=20,
             relief="flat",
             fg="#9FEAF4",
         )
-        self._screen.grid(row=1, column=1, columnspan=10, sticky="we")
+        self._screen2 = tk.Entry(
+            self._frame,
+            textvariable=self._operation_str_var,
+            state="readonly",
+            width=4,
+            readonlybackground="black",
+            bd=20,
+            relief="flat",
+            fg="#9FEAF4",
+        )
+
+        self._screen2.grid(row=0, column=0, sticky="e")
+        self._screen2.config(justify="left")
+
+        self._screen.grid(row=0, column=1, columnspan=5, sticky="we")
         self._screen.config(justify="right")
-        self.number_screen.set("0")
-        self.config_first_button()
-        self.config_buttons()
 
-    def press_number(self, num: str) -> None:
+        self._number_screen.set("0")
+        self._config_buttons()
+
+    @property
+    def _number_on_screen(self) -> Union[float, complex]:
+        number: str = self._number_screen.get()
+        # I considered to use ast.literal_eval for safety reasons,
+        # but since I manage the input, for performance reasons,
+        # I prefer using the built-in eval function
+        return eval(number)
+
+    def _press_number(self, num: str) -> None:
+        number_on_screen: str = self._number_screen.get()
+
         if (
-            self.number_screen.get() == "0"
+            number_on_screen == "0"
             and num not in "0."
-            and not self.number_screen.get().count(".")
+            and not number_on_screen.count(".")
         ):
-            self.number_screen.set("")
+            self._number_screen.set("")
+            self._operation_str_var.set("")
 
-        if self.reset_screen:
-            self.number_screen.set(num)
-            self.reset_screen = False
+            # Update the changes on the screen
+            number_on_screen = self._number_screen.get()
+
+        if self._reset_screen:
+            self._number_screen.set(num)
+            self._operation_str_var.set("")
+            self._reset_screen = False
 
         else:
             if (
                 num not in "0."
-                or (num == "0" and self.number_screen.get() != "0")
-                or (num == "." and not self.number_screen.get().count("."))
+                or (num == "0" and number_on_screen != "0")
+                or (num == "." and not number_on_screen.count("."))
             ):
-                self.number_screen.set(self.number_screen.get() + num)
+                self._number_screen.set(number_on_screen + num)
 
-    def add_func(self) -> None:
-        num: str = self.number_screen.get()
-        if "." in num:
-            self.result += float(num)
+    def _add_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
 
-        else:
-            self.result += int(num)
-        self.operation = "+"
-        self.reset_screen = True
-        self.number_screen.set(self.result)
+        self._result = number + self._number_stored
 
-    def substract_func(self) -> None:
-        num: str = self.number_screen.get()
-        if num != "-":
-            number: float = float(num)
-            if not self._substract_counter:
-                if self.number_screen.get() == "0":
-                    self.number_screen.set("-")
-                    return
-                else:
-                    self.number_stored = number
+        self._operation_str_var.set("+")
 
-            else:
-                if self._substract_counter == 1:
-                    self.result = self.number_stored - number
+        self._operation = "+"
+        self._reset_screen = True
+        self._number_screen.set(self._result)
 
-                else:
-                    self.result -= number
-
-                self.number_screen.set(self.result)
-
-            self._substract_counter += 1
-            self.operation = "-"
-            self.reset_screen = True
-
-    def factorial_func(self) -> None:
-        num: str = self.number_screen.get()
-        try:
-            number: float = float(num) if num.endswith(".0") else int(num)
-
-        except ValueError:
-            self.number_screen.set("USE ONLY INTEGRAL VALUES")
+    def _sign_func(self):
+        num: str = self._number_screen.get()
+        if "-" in num:
+            self._number_screen.set(num.strip("-"))
 
         else:
-            if number >= 0:
-                self.number_screen.set(math.factorial(number))
+            self._number_screen.set("-" + num)
 
-            else:
-                self.number_screen.set("YOU BROKE IT, IDIOT")
+    def _substract_func(self) -> None:
+        screen_display: str = self._number_screen.get()
+        if screen_display == "-":
+            return
 
-        self.reset_screen = True
+        number: Union[float, complex] = self._number_on_screen
 
-    def multiply_func(self) -> None:
-        number: float = float(self.number_screen.get())
+        self._operation_str_var.set("-")
+
+        if self._substract_counter == 0:
+            self._number_stored = number
+
+        else:
+            self._result -= number
+            self._number_screen.set(self._result)
+
+        self._substract_counter += 1
+        self._operation = "-"
+        self._reset_screen = True
+
+    def _factorial_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        self._operation_str_var.set("n!")
+
+        if isinstance(number, float):
+            # See https://es.wikipedia.org/wiki/Funci%C3%B3n_gamma
+            self._number_screen.set(math.gamma(number + 1))
+
+        elif isinstance(number, int):
+            self._number_screen.set(math.factorial(number))
+
+        else:
+            self._number_screen.set("USE ONLY REAL NUMBERS")
+
+        self._reset_screen = True
+
+    def _multiply_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        self._operation_str_var.set("x")
         if not self._multiply_counter:
-            self.number_stored = number
+            self._number_stored = number
 
         else:
-            self.result = self.number_stored * number
-            self.number_screen.set(self.result)
+            self._result = self._number_stored * number
+            self._number_screen.set(self._result)
 
         self._multiply_counter += 1
-        self.operation = "*"
-        self.reset_screen = True
+        self._operation = "*"
+        self._reset_screen = True
 
-    def division_func(self) -> None:
-        number: float = float(self.number_screen.get())
+    def _division_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        self._operation_str_var.set("➗")
         if not self._division_counter:
-            self.number_stored = number
+            self._number_stored = number
 
         else:
             if self._division_counter == 1:
-                self.result = self.number_stored / number
+                self._result = self._number_stored / number
 
             else:
-                self.result /= number
+                self._result /= number
 
-            self.number_screen.set(self.result)
+            self._number_screen.set(self._result)
 
         self._division_counter += 1
-        self.operation = "/"
-        self.reset_screen = True
+        self._operation = "/"
+        self._reset_screen = True
 
-    def modulo_func(self) -> None:
-        number: float = float(self.number_screen.get())
+    def _modulo_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        if isinstance(number, complex):
+            self._number_screen.set("MOD OPERATOR NOT DEFINED FOR COMPLEX NUMBERS")
+            return
+
+        self._operation_str_var.set("%")
         if not self._modulo_counter:
-            self.number_stored = number
+            self._number_stored = number
 
         else:
+
             if self._modulo_counter == 1:
-                self.result = self.number_stored % number
+                self._result = self._number_stored % number
 
             else:
-                self.result %= number
+                self._result %= number
 
-            self.number_screen.set(self.result)
+            self._number_screen.set(self._result)
 
         self._modulo_counter += 1
-        self.operation = "%"
-        self.reset_screen = True
+        self._operation = "%"
+        self._reset_screen = True
 
-    def sqrt_func(self) -> None:
-        number: float = float(self.number_screen.get())
-        if number >= 0:
-            self.number_screen.set(math.sqrt(number))
+    def _sqrt_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+        self._operation_str_var.set("√n")
+
+        if isinstance(number, complex) or number < 0:
+            self._number_screen.set(cmath.sqrt(number))
 
         else:
-            number = math.sqrt(abs(number))
-            self.number_screen.set(f"{number}j")
+            self._number_screen.set(math.sqrt(number))
 
-        self.reset_screen = True
+        self._reset_screen = True
 
-    def square_func(self) -> None:
-        number: float = float(self.number_screen.get())
-        self.number_screen.set(number ** 2)
-        self.reset_screen = True
+    def _inverse_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+        self._operation_str_var.set("1/x")
+        self._number_screen.set(1 / number)
 
-    def trigonometric_func(self, function: Callable[[float], float]) -> None:
-        number: float = float(self.number_screen.get())
-        self.number_screen.set(function(number))
-        self.reset_screen = True
+        self._reset_screen = True
+
+    def _square_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        self._operation_str_var.set("x^2")
+
+        self._number_screen.set(number ** 2)
+        self._reset_screen = True
+
+    def _logarithmic_func(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        self._operation_str_var.set("ln(x)")
+
+        if isinstance(number, complex):
+            self._number_screen.set(cmath.log(number))
+        else:
+            if number > 0:
+                self._number_screen.set(math.log(number))
+            else:
+                self._number_screen.set("USE ONLY POSITIVE NUMBERS")
+
+        self._reset_screen = True
+
+    def _trigonometric_func(self, function: str) -> None:
+        self._operation_str_var.set("trig func")
+        number: Union[float, complex] = self._number_on_screen
+
+        # Depending on if it's a complex number, use the appropriate library
+        if isinstance(number, complex):
+            self._number_screen.set(getattr(cmath, function)(number))
+        else:
+            self._number_screen.set(getattr(math, function)(number))
+
+        self._reset_screen = True
+
+    ##############################################
+    def _constants(self, constant: float) -> None:
+        self._number_screen.set(constant)
+        self._reset_screen = True
 
     ##############################################
 
-    def results(self) -> None:
-        number: float = float(self.number_screen.get())
-        operation_done: str = self.operation
+    def _results(self) -> None:
+        number: Union[float, complex] = self._number_on_screen
+
+        operation_done: str = self._operation
+
+        res: Union[float, complex] = number
+
         if operation_done == "+":
-            self.number_screen.set(self.result + number)
-            self.result = 0
+            res = self._result + number
+            self._result = 0
 
         elif operation_done == "-":
-            self.number_screen.set(self.number_stored - number)
+            res = self._number_stored - number
             self._substract_counter = 0
 
         elif operation_done == "*":
-            self.number_screen.set(self.number_stored * number)
+            res = self._number_stored * number
             self._multiply_counter = 0
 
         elif operation_done == "/":
-            self.number_screen.set(self.number_stored / number)
+            res = self._number_stored / number
             self._division_counter = 0
 
         elif operation_done == "%":
-            self.number_screen.set(self.number_stored % number)
+            res = self._number_stored % number
             self._modulo_counter = 0
 
-        self.number_stored = 0
-        self.operation = ""
+        self._number_screen.set(res)
 
-    def reset(self) -> None:
-        self.result = 0
-        self.number_stored = 0
+        self._number_stored = 0
+        self._operation = ""
+
+    def _reset(self) -> None:
+        self._result = 0
+        self._number_stored = 0
 
         self._substract_counter = 0
         self._multiply_counter = 0
         self._division_counter = 0
         self._modulo_counter = 0
 
-        self.number_screen.set("0")
+        self._number_screen.set("0")
+        self._operation_str_var.set("")
 
-    def config_first_button(self) -> None:
-        self.buttons.append(
-            tk.Button(self, text="AC", command=self.reset, bg="#252440", fg="white")
-        )
-        self.buttons[0].config(height=4, width=8)
-        self.buttons[0].grid(row=2, column=0, columnspan=3, ipadx=33)
+    def _config_buttons(self) -> None:
 
-    def config_buttons(self) -> None:
-        symbols: List[str] = [
-            "√n",
-            "n!",
-            "%",
-            "7",
-            "8",
-            "9",
-            "➗",
-            "cos(x)",
-            "4",
-            "5",
-            "6",
-            "✖",
-            "sin(x)",
-            "1",
-            "2",
-            "3",
-            "➖",
-            "tan(x)",
-            "0",
-            ".",
-            "=",
-            "➕",
-            "x^2",
+        functions_with_it_symbol: List[Tuple[Callable[..., None], str]] = [
+            (self._constants, "π"),
+            (self._reset, "AC"),
+            (self._sqrt_func, "√n"),
+            (self._factorial_func, "n!"),
+            (self._modulo_func, "%"),
+            (self._constants, "e"),
+            (self._press_number, "7"),
+            (self._press_number, "8"),
+            (self._press_number, "9"),
+            (self._division_func, "➗"),
+            (lambda: self._trigonometric_func("cos"), "cos(x)"),
+            (self._inverse_func, "1/x"),
+            (self._press_number, "4"),
+            (self._press_number, "5"),
+            (self._press_number, "6"),
+            (self._multiply_func, "✖"),
+            (lambda: self._trigonometric_func("sin"), "sin(x)"),
+            (self._sign_func, "±"),
+            (self._press_number, "1"),
+            (self._press_number, "2"),
+            (self._press_number, "3"),
+            (self._substract_func, "➖"),
+            (lambda: self._trigonometric_func("tan"), "tan(x)"),
+            (self._logarithmic_func, "ln(x)"),
+            (self._press_number, "0"),
+            (self._press_number, "."),
+            (self._results, "="),
+            (self._add_func, "➕"),
+            (self._square_func, "x^2"),
         ]
-
-        functions: List[Callable[..., None]] = [
-            self.sqrt_func,
-            self.factorial_func,
-            self.modulo_func,
-            self.press_number,
-            self.press_number,
-            self.press_number,
-            self.division_func,
-            self.trigonometric_func,
-            self.press_number,
-            self.press_number,
-            self.press_number,
-            self.multiply_func,
-            self.trigonometric_func,
-            self.press_number,
-            self.press_number,
-            self.press_number,
-            self.substract_func,
-            self.trigonometric_func,
-            self.press_number,
-            self.press_number,
-            self.results,
-            self.add_func,
-            self.square_func,
-        ]
-        parameters: Iterator[Callable[[float], float]] = iter(
-            [math.cos, math.sin, math.tan]
-        )
+        constants: Iterator[float] = iter((math.pi, math.e))
 
         columns: Iterator[int] = iter(
-            [3, 4, 5] + [number for _ in range(7) for number in range(1, 6)]
+            [0, 1, 3, 4, 5] + [number for _ in range(4) for number in range(6)]
         )
-
-        button_indexes: Iterator[int] = iter(range(1, 24))
 
         rows: Iterator[int] = iter(
-            [2, 2, 2] + [number for number in range(3, 7) for _ in range(5)]
+            [1, 1, 1, 1, 1] + [number for number in range(2, 6) for _ in range(6)]
         )
 
-        for symbol, function in zip(symbols, functions):
-            if function == self.press_number:
-                self.buttons.append(
+        button_indexes: Iterator[int] = iter(range(29))
+
+        for function, symbol in functions_with_it_symbol:
+            if function == self._press_number:
+                self._buttons.append(
                     tk.Button(
-                        self,
+                        self._frame,
                         text=symbol,
                         bg="#81BEF7",
-                        command=lambda parameter=symbol: self.press_number(parameter),
+                        command=lambda symbol=symbol: self._press_number(symbol),
                     )
                 )
 
-            elif function == self.trigonometric_func:
-                self.buttons.append(
+            elif function == self._constants:
+                self._buttons.append(
                     tk.Button(
-                        self,
+                        self._frame,
                         text=symbol,
-                        bg="grey",
+                        command=lambda constant=next(constants): self._constants(
+                            constant
+                        ),
+                        bg="#8A0808",
                         fg="white",
-                        command=lambda function=function, parameter=next(
-                            parameters
-                        ): function(parameter),
                     )
                 )
+
+            elif function == self._reset:
+                self._buttons.append(
+                    tk.Button(
+                        self._frame,
+                        text=symbol,
+                        command=self._reset,
+                        bg="#252440",
+                        fg="white",
+                    )
+                )
+                self._buttons[-1].grid(row=1, column=1, columnspan=2, ipadx=53)
+                self._buttons[-1].config(height=4)
+
             else:
-                self.buttons.append(
+                self._buttons.append(
                     tk.Button(
-                        self,
+                        self._frame,
                         text=symbol,
-                        bg="grey",
+                        bg="#585858",
                         fg="white",
-                        command=lambda function=function: function(),
+                        command=function,
                     )
                 )
+
             index_of_button: int = next(button_indexes)
-            self.buttons[index_of_button].config(height=4, width=8)
-            self.buttons[index_of_button].grid(row=next(rows), column=next(columns))
+            row: int = next(rows)
+            column: int = next(columns)
+
+            if function != self._reset:
+                self._buttons[index_of_button].config(height=4, width=8)
+                self._buttons[index_of_button].grid(row=row, column=column)
 
 
-CALCULATOR = tk.Tk()
+if __name__ == "__main__":
+    WINDOW = tk.Tk()
 
-APP = CalculatorV2(CALCULATOR)
+    CALCULATOR = Calculator(WINDOW)
 
-CALCULATOR.mainloop()
+    WINDOW.mainloop()
